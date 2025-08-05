@@ -3,7 +3,7 @@ package com.example.pokedex.ui.detail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo.ApolloClient
-import com.example.pokemon.graphql.GetPokemonDetailQuery
+import com.example.pokedex.GetPokemonDetailQuery
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

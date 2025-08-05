@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.apollographql.apollo") version "4.3.2"
+    alias(libs.plugins.apollo)
 }
 
 android {
@@ -41,16 +41,18 @@ android {
 }
 
 apollo {
-    service("pokeapi") {
-        packageName.set("com.example.pokemon.graphql")
+    service("service") {
+        packageName.set("com.example.pokedex")
+        schemaFile.set(file("src/main/graphql/com/example/pokedex/schema.graphqls"))
     }
 }
 
 
 dependencies {
 //  Custom deps
-    implementation(libs.apollo.runtime)
     implementation(libs.coil.compose)
+    implementation(libs.apollo.runtime)
+
 
 
 //  Default deps

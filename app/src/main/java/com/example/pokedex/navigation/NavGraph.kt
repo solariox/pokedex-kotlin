@@ -19,9 +19,10 @@ fun NavGraph(navController: NavHostController) {
             PokemonListScreen(navController, viewModel)
         }
         composable("detail/{name}") { backStackEntry ->
-            val name = backStackEntry.arguments?.getString("name") ?: return@composable
-            val viewModel: PokemonDetailViewModel = viewModel()
-            PokemonDetailScreen(name, viewModel)
+//            val name = backStackEntry.arguments?.getString("name") ?: return@composable
+//            val viewModel: PokemonDetailViewModel = viewModel()
+//            PokemonDetailScreen(name, viewModel)
+
         }
     }
 }
