@@ -1,0 +1,29 @@
+schema {
+  query: Query
+}
+
+type Query {
+  pokemons(limit: Int, offset: Int): PokemonList
+  pokemon(name: String!): Pokemon
+}
+
+type PokemonList {
+  results: [PokemonResult]
+}
+
+type PokemonResult {
+  name: String
+  image: String
+}
+
+type Pokemon {
+  id: Int
+  name: String
+  height: Int
+  weight: Int
+  sprites: PokemonSprites
+}
+
+type PokemonSprites {
+  front_default: String
+}

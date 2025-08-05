@@ -26,3 +26,11 @@ Fetch les infos détaillées à partir du discriminant.
 Affiche un squelette de chargement (loading state).
 
 Affiche les données une fois chargées.
+
+## Setup initial
+
+- Creation d'un EmptyProject
+- Init de Apollo
+	+ Note: J'ai pas trop compris le setup initial de schema.graphqls
+	
+

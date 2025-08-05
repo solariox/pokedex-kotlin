@@ -1,0 +1,8 @@
+query GetPokemonList {
+    pokemons(limit: 20, offset: 0) {
+        results {
+            name
+            image
+        }
+    }
+}
