@@ -26,10 +26,10 @@ import com.example.pokedex.ui.list.PokemonListScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavGraph(navController: NavHostController) {
-    // Get current back stack entry
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val canNavigateBack = navController.previousBackStackEntry != null
+    val currentRoute = backStackEntry?.destination?.route
     val navigateUp: () -> Unit = { navController.navigateUp() }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -39,12 +39,11 @@ fun NavGraph(navController: NavHostController) {
                 ),
                 title = { Text("Pokedex") },
                 navigationIcon = {
-                    if (canNavigateBack) {
+                    if (currentRoute != null && currentRoute != "list") {
                         IconButton(onClick = navigateUp) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "back"
-
                             )
                         }
                     }
@@ -54,7 +53,6 @@ fun NavGraph(navController: NavHostController) {
     ) {
         Column(modifier = Modifier.padding(it)) {
             val startRoute = "list"
-            val innerStartRoute = "exempleWithRoute"
             NavHost(navController = navController, startDestination = startRoute) {
                 composable("list") {
                     PokemonListScreen(navController)
