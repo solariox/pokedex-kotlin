@@ -20,6 +20,7 @@ data class PokemonDetailUiModel(
     val name: String,
     val height: Int,
     val weight: Int,
+    val types: String,
     val imageUrl: String
 )
 
@@ -48,6 +49,11 @@ open class PokemonDetailViewModel @Inject constructor(
                     name = pokemon.name.orEmpty(),
                     height = pokemon.height ?: 0,
                     weight = pokemon.weight ?: 0,
+                    types = pokemon.types
+                        ?.mapNotNull { it?.type?.name }
+                        ?.joinToString(", ")
+                        .orEmpty(),
+
                     imageUrl = pokemon.sprites?.front_default.orEmpty()
                 )
 

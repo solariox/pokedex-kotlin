@@ -75,6 +75,7 @@ fun PokemonDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Height: ${pokemon.height}")
                 Text("Weight: ${pokemon.weight}")
+                Text("Types: ${pokemon.types}")
             }
         }
     }
