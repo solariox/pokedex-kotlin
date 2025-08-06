@@ -1,28 +1,72 @@
 package com.example.pokedex.navigation
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navigation
 import com.example.pokedex.ui.list.PokemonListScreen
 import com.example.pokedex.ui.detail.PokemonDetailScreen
-import com.example.pokedex.ui.detail.PokemonDetailViewModel
-import com.example.pokedex.ui.list.PokemonListViewModel
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "list") {
-        composable("list") {
-            val viewModel: PokemonListViewModel = viewModel() // Or your specific way of getting it
-            PokemonListScreen(navController, viewModel)
-        }
-        composable("detail/{name}") { backStackEntry ->
-//            val name = backStackEntry.arguments?.getString("name") ?: return@composable
-//            val viewModel: PokemonDetailViewModel = viewModel()
-//            PokemonDetailScreen(name, viewModel)
+    // Get current back stack entry
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val canNavigateBack = navController.previousBackStackEntry != null
+    val navigateUp: () -> Unit = { navController.navigateUp() }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                ),
+                title = { Text("Pokedex") },
+                navigationIcon = {
+                    if (canNavigateBack) {
+                        IconButton(onClick = navigateUp) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = "back"
 
+                            )
+                        }
+                    }
+                }
+            )
+        }
+    ) {
+        Column(modifier = Modifier.padding(it)) {
+            val startRoute = "list"
+            val innerStartRoute = "exempleWithRoute"
+            NavHost(navController = navController, startDestination = startRoute) {
+                composable("list") {
+                    PokemonListScreen(navController)
+                }
+//                composable("detail/{name}") { backStackEntry ->
+//                    val name = backStackEntry.arguments?.getString("name") ?: return@composable
+//                    PokemonDetailScreen(name)
+//                }
+            }
         }
     }
+
 }

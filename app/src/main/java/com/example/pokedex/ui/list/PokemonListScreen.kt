@@ -20,19 +20,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+
 
 @Composable
 fun PokemonListScreen(
-    navController: NavController,
-    viewModel: PokemonListViewModel = viewModel()
+    navController: NavHostController,
+    viewModel: PokemonListViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     var searchQuery by remember { mutableStateOf("") }
@@ -56,7 +57,6 @@ fun PokemonListScreen(
                         if (exists) {
                             navController.navigate("detail/${searchQuery.lowercase()}")
                         } else {
-                            // Snackbar ou Toast plus tard
                             println("Pokemon not found.")
                         }
                     }
@@ -71,7 +71,10 @@ fun PokemonListScreen(
         }
 
         if (searchState is SearchState.Error) {
-            Text("Error: ${(searchState as SearchState.Error).message}", color = MaterialTheme.colorScheme.error)
+            Text(
+                "Error: ${(searchState as SearchState.Error).message}",
+                color = MaterialTheme.colorScheme.error
+            )
         }
     }
 }

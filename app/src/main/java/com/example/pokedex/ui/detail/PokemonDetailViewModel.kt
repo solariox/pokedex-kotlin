@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo.ApolloClient
 import com.example.pokedex.GetPokemonDetailQuery
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed interface PokemonDetailUiState {
     object Loading : PokemonDetailUiState
@@ -21,14 +23,13 @@ data class PokemonDetailUiModel(
     val imageUrl: String
 )
 
-class PokemonDetailViewModel(
-    private val apolloClient: ApolloClient = ApolloClient.Builder()
-        .serverUrl("https://graphql-pokeapi.graphcdn.app/")
-        .build()
+@HiltViewModel
+open class PokemonDetailViewModel @Inject constructor(
+    private val apolloClient: ApolloClient
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<PokemonDetailUiState>(PokemonDetailUiState.Loading)
-    val uiState: StateFlow<PokemonDetailUiState> = _uiState
+    open val uiState: StateFlow<PokemonDetailUiState> = _uiState
 
     fun loadPokemon(name: String) {
         _uiState.value = PokemonDetailUiState.Loading
