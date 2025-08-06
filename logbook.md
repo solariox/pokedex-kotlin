@@ -34,3 +34,16 @@ Affiche les données une fois chargées.
 	+ Note: J'ai pas trop compris le setup initial de schema.graphqls
 	
 
+
+## TL;DR lecture androids best practices
+
+
+
+- **Single source of truth ** (SSOT) in app, with **Unidirectionnal Data Flow (UDF)**  drived by **StateFlow**
+
+(via stateflow): Datasource ------> UI
+
+(via event):     Datasource <----- UI
+
+- Use repository, which is the only one to deal with data source (and not viewmodel). Its here where you deal with local vs remote DS
+- 

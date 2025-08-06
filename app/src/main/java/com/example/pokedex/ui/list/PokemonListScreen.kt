@@ -1,6 +1,5 @@
 package com.example.pokedex.ui.list
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -46,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
@@ -63,8 +63,8 @@ fun PokemonListScreen(
 ) {
     val scope = rememberCoroutineScope()
     var searchQuery by remember { mutableStateOf("") }
-    val searchState by viewModel.searchState.collectAsState()
-    val searchHistory = viewModel.searchHistory
+    val searchState by viewModel.searchState.collectAsStateWithLifecycle()
+    val searchHistory = viewModel.searchHistory.collectAsStateWithLifecycle()
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val currentContext = LocalContext.current // Get the current context
@@ -95,9 +95,6 @@ fun PokemonListScreen(
                 keyboardActions = KeyboardActions(onSearch = {
                     if (searchQuery.isNotBlank()) {
                         viewModel.checkPokemon(searchQuery.trim()) { exists, pokemonName ->
-                            if (exists) {
-                                Toast.makeText(currentContext, "Pokémon \"$pokemonName\" found!", Toast.LENGTH_SHORT).show()
-                            }
                             searchQuery = ""
                         }
                         keyboardController?.hide()
@@ -126,8 +123,6 @@ fun PokemonListScreen(
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
-                    } else {
-
                     }
                 }
                 is SearchState.Idle -> {
@@ -136,7 +131,7 @@ fun PokemonListScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (searchHistory.isNotEmpty()) {
+            if (searchHistory.value.isNotEmpty()) {
                 Text("Search History", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -145,7 +140,7 @@ fun PokemonListScreen(
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    items(searchHistory) { item ->
+                    items(searchHistory.value) { item ->
                         HistoryRow(item = item, onHistoryItemClick = {
                             navController.navigate("detail/${item.name.lowercase()}")
                         })
@@ -199,95 +194,94 @@ fun HistoryRow(item: PokemonHistoryItemData, onHistoryItemClick: (PokemonHistory
 }
 
 
-private class FakePokemonListViewModel(
-    initialSearchState: SearchState = SearchState.Idle,
-    initialHistory: List<PokemonHistoryItemData> = emptyList()
-) : IPokemonListViewModel {
-    override val searchState: MutableStateFlow<SearchState> = MutableStateFlow(initialSearchState)
-    private val _searchHistory = mutableStateListOf<PokemonHistoryItemData>().also { it.addAll(initialHistory) }
-    override val searchHistory: List<PokemonHistoryItemData> = _searchHistory
+//private class FakePokemonListViewModel(
+//    initialSearchState: SearchState = SearchState.Idle,
+//    initialHistory: List<PokemonHistoryItemData> = emptyList()
+//) : IPokemonListViewModel {
+//    override val searchState: MutableStateFlow<SearchState> = MutableStateFlow(initialSearchState)
+//    override val searchHistory: MutableStateFlow<List<PokemonHistoryItemData>> = MutableStateFlow(initialHistory)
+//
+//    override fun checkPokemon(name: String, onResult: (exists: Boolean, pokemonName: String?) -> Unit) {
+//        searchState.value = SearchState.Loading
+//        kotlinx.coroutines.MainScope().launch {
+//            kotlinx.coroutines.delay(1000)
+//            if (name.equals("pikachu", ignoreCase = true)) {
+//                val foundPokemon = PokemonHistoryItemData("Pikachu", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png")
+//                _searchHistory.removeAll { it.name.equals(foundPokemon.name, ignoreCase = true) }
+//                _searchHistory.add(0, foundPokemon)
+//                searchState.value = SearchState.Success(foundPokemon.name, true)
+//                onResult(true, foundPokemon.name)
+//            } else if (name.equals("error", ignoreCase = true)) {
+//                searchState.value = SearchState.Error("Failed to fetch '$name'")
+//                onResult(false, name)
+//            } else {
+//                searchState.value = SearchState.Success(name, false)
+//                onResult(false, name)
+//            }
+//        }
+//    }
+//
+//    override fun clearSearchHistory() {
+//        _searchHistory.clear()
+//    }
+//}
 
-    override fun checkPokemon(name: String, onResult: (exists: Boolean, pokemonName: String?) -> Unit) {
-        searchState.value = SearchState.Loading
-        kotlinx.coroutines.MainScope().launch {
-            kotlinx.coroutines.delay(1000)
-            if (name.equals("pikachu", ignoreCase = true)) {
-                val foundPokemon = PokemonHistoryItemData("Pikachu", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png")
-                _searchHistory.removeAll { it.name.equals(foundPokemon.name, ignoreCase = true) }
-                _searchHistory.add(0, foundPokemon)
-                searchState.value = SearchState.Success(foundPokemon.name, true)
-                onResult(true, foundPokemon.name)
-            } else if (name.equals("error", ignoreCase = true)) {
-                searchState.value = SearchState.Error("Failed to fetch '$name'")
-                onResult(false, name)
-            } else {
-                searchState.value = SearchState.Success(name, false)
-                onResult(false, name)
-            }
-        }
-    }
-
-    override fun clearSearchHistory() {
-        _searchHistory.clear()
-    }
-}
-
-@Preview(showBackground = true, name = "Pokemon List - Idle")
-@Composable
-fun PokemonListScreenPreview_Idle() {
-    PokedexTheme {
-        PokemonListScreen(
-            navController = rememberNavController(),
-            viewModel = FakePokemonListViewModel(
-                initialHistory = listOf(
-                    PokemonHistoryItemData("Bulbasaur", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"),
-                    PokemonHistoryItemData("Charmander", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png")
-                )
-            )
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Pokemon List - Loading")
-@Composable
-fun PokemonListScreenPreview_Loading() {
-    PokedexTheme {
-        PokemonListScreen(
-            navController = rememberNavController(),
-            viewModel = FakePokemonListViewModel(initialSearchState = SearchState.Loading)
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Pokemon List - Error")
-@Composable
-fun PokemonListScreenPreview_Error() {
-    PokedexTheme {
-        PokemonListScreen(
-            navController = rememberNavController(),
-            viewModel = FakePokemonListViewModel(initialSearchState = SearchState.Error("Network connection lost"))
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Pokemon List - Not Found")
-@Composable
-fun PokemonListScreenPreview_NotFound() {
-    PokedexTheme {
-        PokemonListScreen(
-            navController = rememberNavController(),
-            viewModel = FakePokemonListViewModel(initialSearchState = SearchState.Success("NonExistentMon", false))
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Pokemon List - Empty History")
-@Composable
-fun PokemonListScreenPreview_EmptyHistory() {
-    PokedexTheme {
-        PokemonListScreen(
-            navController = rememberNavController(),
-            viewModel = FakePokemonListViewModel(initialHistory = emptyList())
-        )
-    }
-}
+//@Preview(showBackground = true, name = "Pokemon List - Idle")
+//@Composable
+//fun PokemonListScreenPreview_Idle() {
+//    PokedexTheme {
+//        PokemonListScreen(
+//            navController = rememberNavController(),
+//            viewModel = FakePokemonListViewModel(
+//                initialHistory = listOf(
+//                    PokemonHistoryItemData("Bulbasaur", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"),
+//                    PokemonHistoryItemData("Charmander", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png")
+//                )
+//            )
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Pokemon List - Loading")
+//@Composable
+//fun PokemonListScreenPreview_Loading() {
+//    PokedexTheme {
+//        PokemonListScreen(
+//            navController = rememberNavController(),
+//            viewModel = FakePokemonListViewModel(initialSearchState = SearchState.Loading)
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Pokemon List - Error")
+//@Composable
+//fun PokemonListScreenPreview_Error() {
+//    PokedexTheme {
+//        PokemonListScreen(
+//            navController = rememberNavController(),
+//            viewModel = FakePokemonListViewModel(initialSearchState = SearchState.Error("Network connection lost"))
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Pokemon List - Not Found")
+//@Composable
+//fun PokemonListScreenPreview_NotFound() {
+//    PokedexTheme {
+//        PokemonListScreen(
+//            navController = rememberNavController(),
+//            viewModel = FakePokemonListViewModel(initialSearchState = SearchState.Success("NonExistentMon", false))
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Pokemon List - Empty History")
+//@Composable
+//fun PokemonListScreenPreview_EmptyHistory() {
+//    PokedexTheme {
+//        PokemonListScreen(
+//            navController = rememberNavController(),
+//            viewModel = FakePokemonListViewModel(initialHistory = emptyList())
+//        )
+//    }
+//}
