@@ -3,55 +3,67 @@ package com.example.pokedex.ui.list
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo.ApolloClient
 import com.example.pokedex.GetPokemonDetailQuery
+import com.example.pokedex.datastore.PokemonDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface IPokemonListViewModel {
     val searchState: StateFlow<SearchState>
-    val searchHistory: List<PokemonHistoryItem>
+    val searchHistory: List<PokemonHistoryItemData>
     fun checkPokemon(name: String, onResult: (exists: Boolean, pokemonName: String?) -> Unit)
     fun clearSearchHistory()
 }
 
 
-data class PokemonHistoryItem(
-    val name: String,
-    val spriteUrl: String
-)
-
 sealed interface SearchState {
     object Idle : SearchState
     object Loading : SearchState
-    data class Success(val pokemonName: String, val exists: Boolean) : SearchState // Modifié pour inclure le nom
+    data class Success(val pokemonName: String, val exists: Boolean) :
+        SearchState // Modifié pour inclure le nom
+
     data class Error(val message: String) : SearchState
 }
 
 @HiltViewModel
 class PokemonListViewModel @Inject constructor(
-    private val apolloClient: ApolloClient
+    private val apolloClient: ApolloClient,
+    private val pokemonDataStore: PokemonDataStore
 ) : ViewModel(), IPokemonListViewModel {
 
     private val _searchState = MutableStateFlow<SearchState>(SearchState.Idle)
     override val searchState: StateFlow<SearchState> = _searchState.asStateFlow()
 
-    // Utiliser mutableStateListOf pour que les changements soient observés par Compose
-    // si vous prévoyez d'afficher l'historique directement et qu'il change souvent.
-    // Sinon, un StateFlow<List<PokemonHistoryItem>> avec une MutableList interne est aussi bien.
-    private val _searchHistory = mutableStateListOf<PokemonHistoryItem>()
-    override val searchHistory: List<PokemonHistoryItem> = _searchHistory
+    private val _searchHistory = mutableStateListOf<PokemonHistoryItemData>()
+    override val searchHistory: List<PokemonHistoryItemData> = _searchHistory
 
     companion object {
         private const val MAX_HISTORY_SIZE = 10
     }
+    init {
+        viewModelScope.launch {
+            pokemonDataStore.searchHistoryFlow
+                .distinctUntilChanged() // Optimisation pour éviter les mises à jour inutiles
+                .collect { historyFromDataStore ->
+                    _searchHistory.clear()
+                    // Prendre seulement les MAX_HISTORY_SIZE plus récents si nécessaire lors du chargement
+                    _searchHistory.addAll(historyFromDataStore.take(MAX_HISTORY_SIZE))
+                }
+        }
+    }
 
-    override fun checkPokemon(name: String, onResult: (exists: Boolean, pokemonName: String?) -> Unit) {
+    override fun checkPokemon(
+        name: String,
+        onResult: (exists: Boolean, pokemonName: String?) -> Unit
+    ) {
         val queryName = name.trim().lowercase()
         if (queryName.isEmpty()) {
             _searchState.value = SearchState.Error("Search query cannot be empty.")
@@ -93,22 +105,28 @@ class PokemonListViewModel @Inject constructor(
         }
     }
 
-    private fun addPokemonToHistory(pokemon: GetPokemonDetailQuery.Pokemon) {
-        val historyItem = PokemonHistoryItem(
+    private fun addPokemonToHistory(pokemon: GetPokemonDetailQuery.Pokemon) { // Utilisez votre type Apollo ici
+        val newItem = PokemonHistoryItemData(
             name = pokemon.name.orEmpty(),
             spriteUrl = pokemon.sprites?.front_default.orEmpty()
         )
 
-        _searchHistory.removeAll { it.name.equals(historyItem.name, ignoreCase = true) }
-        _searchHistory.add(0, historyItem)
-
+        _searchHistory.removeAll { it.name.equals(newItem.name, ignoreCase = true) }
+        _searchHistory.add(0, newItem) // Ajouter au début pour le plus récent
         if (_searchHistory.size > MAX_HISTORY_SIZE) {
-            _searchHistory.removeLastOrNull()
+            _searchHistory.removeLastOrNull() // Enlever le plus ancien si la limite est dépassée
+        }
+
+        viewModelScope.launch {
+            pokemonDataStore.saveSearchHistory(_searchHistory.toList()) // Convertir en List immuable
         }
     }
 
     override fun clearSearchHistory() {
         _searchHistory.clear()
+        viewModelScope.launch {
+            pokemonDataStore.clearSearchHistory()
+        }
     }
 }
 

@@ -78,7 +78,7 @@ fun PokemonListScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AsyncImage(
-                model = "https://raw.githubusercontent.com/PokeAPI/sprites/refs/heads/master/sprites/pokemon/versions/generation-v/black-white/shiny//${Random.nextInt(151)}.png",
+                model = "https://raw.githubusercontent.com/PokeAPI/sprites/refs/heads/master/sprites/pokemon/versions/generation-v/black-white/shiny/2.png",
                 contentDescription = "Pokédex",
                 modifier = Modifier
                     .size(150.dp)
@@ -98,6 +98,7 @@ fun PokemonListScreen(
                             if (exists) {
                                 Toast.makeText(currentContext, "Pokémon \"$pokemonName\" found!", Toast.LENGTH_SHORT).show()
                             }
+                            searchQuery = ""
                         }
                         keyboardController?.hide()
                     }
@@ -172,7 +173,7 @@ fun PokemonListScreen(
 }
 
 @Composable
-fun HistoryRow(item: PokemonHistoryItem, onHistoryItemClick: (PokemonHistoryItem) -> Unit) {
+fun HistoryRow(item: PokemonHistoryItemData, onHistoryItemClick: (PokemonHistoryItemData) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -200,18 +201,18 @@ fun HistoryRow(item: PokemonHistoryItem, onHistoryItemClick: (PokemonHistoryItem
 
 private class FakePokemonListViewModel(
     initialSearchState: SearchState = SearchState.Idle,
-    initialHistory: List<PokemonHistoryItem> = emptyList()
+    initialHistory: List<PokemonHistoryItemData> = emptyList()
 ) : IPokemonListViewModel {
     override val searchState: MutableStateFlow<SearchState> = MutableStateFlow(initialSearchState)
-    private val _searchHistory = mutableStateListOf<PokemonHistoryItem>().also { it.addAll(initialHistory) }
-    override val searchHistory: List<PokemonHistoryItem> = _searchHistory
+    private val _searchHistory = mutableStateListOf<PokemonHistoryItemData>().also { it.addAll(initialHistory) }
+    override val searchHistory: List<PokemonHistoryItemData> = _searchHistory
 
     override fun checkPokemon(name: String, onResult: (exists: Boolean, pokemonName: String?) -> Unit) {
         searchState.value = SearchState.Loading
         kotlinx.coroutines.MainScope().launch {
             kotlinx.coroutines.delay(1000)
             if (name.equals("pikachu", ignoreCase = true)) {
-                val foundPokemon = PokemonHistoryItem("Pikachu", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png")
+                val foundPokemon = PokemonHistoryItemData("Pikachu", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png")
                 _searchHistory.removeAll { it.name.equals(foundPokemon.name, ignoreCase = true) }
                 _searchHistory.add(0, foundPokemon)
                 searchState.value = SearchState.Success(foundPokemon.name, true)
@@ -239,8 +240,8 @@ fun PokemonListScreenPreview_Idle() {
             navController = rememberNavController(),
             viewModel = FakePokemonListViewModel(
                 initialHistory = listOf(
-                    PokemonHistoryItem("Bulbasaur", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"),
-                    PokemonHistoryItem("Charmander", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png")
+                    PokemonHistoryItemData("Bulbasaur", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"),
+                    PokemonHistoryItemData("Charmander", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png")
                 )
             )
         )

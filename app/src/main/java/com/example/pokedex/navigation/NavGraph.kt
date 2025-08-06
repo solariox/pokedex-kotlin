@@ -29,6 +29,7 @@ fun NavGraph(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val navigateUp: () -> Unit = { navController.navigateUp() }
+    val pokemonName = backStackEntry?.arguments?.getString("name")
 
     Scaffold(
         topBar = {
@@ -37,7 +38,7 @@ fun NavGraph(navController: NavHostController) {
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
-                title = { Text("Pokedex") },
+                title = { Text("Pokedex" + if (pokemonName != null) " - $pokemonName" else "") },
                 navigationIcon = {
                     if (currentRoute != null && currentRoute != "list") {
                         IconButton(onClick = navigateUp) {
@@ -58,7 +59,7 @@ fun NavGraph(navController: NavHostController) {
                     PokemonListScreen(navController)
                 }
                 composable("detail/{name}") { backStackEntry ->
-                    val name = backStackEntry.arguments?.getString("name") ?: return@composable
+                    val name = pokemonName ?: return@composable
                     PokemonDetailScreen(name)
                 }
             }
