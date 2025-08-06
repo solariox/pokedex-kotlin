@@ -3,7 +3,7 @@ package com.example.pokedex.navigation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,10 +19,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navigation
-import com.example.pokedex.ui.list.PokemonListScreen
 import com.example.pokedex.ui.detail.PokemonDetailScreen
+import com.example.pokedex.ui.list.PokemonListScreen
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +42,7 @@ fun NavGraph(navController: NavHostController) {
                     if (canNavigateBack) {
                         IconButton(onClick = navigateUp) {
                             Icon(
-                                imageVector = Icons.Filled.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "back"
 
                             )
@@ -61,10 +59,10 @@ fun NavGraph(navController: NavHostController) {
                 composable("list") {
                     PokemonListScreen(navController)
                 }
-//                composable("detail/{name}") { backStackEntry ->
-//                    val name = backStackEntry.arguments?.getString("name") ?: return@composable
-//                    PokemonDetailScreen(name)
-//                }
+                composable("detail/{name}") { backStackEntry ->
+                    val name = backStackEntry.arguments?.getString("name") ?: return@composable
+                    PokemonDetailScreen(name)
+                }
             }
         }
     }

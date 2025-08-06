@@ -57,6 +57,7 @@ apollo {
 dependencies {
 //  Custom deps
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.apollo.runtime)
 
     // Conf Hilt

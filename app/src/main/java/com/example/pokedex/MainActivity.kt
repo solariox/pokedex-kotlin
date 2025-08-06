@@ -1,4 +1,3 @@
-
 package com.example.pokedex
 
 import android.os.Bundle
@@ -31,4 +30,12 @@ fun PokedexApp(
 ) {
     val navController = rememberNavController()
     NavGraph(navController)
+}
+
+@Preview
+@Composable
+fun PokedexAppPreview() {
+    PokedexTheme {
+        PokedexApp()
+    }
 }
